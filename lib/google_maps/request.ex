@@ -27,7 +27,7 @@ defmodule GoogleMaps.Request do
     |> format_headers()
   end
 
-
+  # TODO: Support other endpoints that require POST requests
   @spec post(String.t, keyword()) :: GoogleMaps.Response.t
   def post(_endpoint, params) do
     {secure, params} = Keyword.pop(params, :secure)
