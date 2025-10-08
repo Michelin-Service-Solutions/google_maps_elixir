@@ -103,6 +103,9 @@ defmodule GoogleMaps.Request do
             longitude: lng
           }
         }
+      },
+      routeModifiers: %{
+        avoidFerries: true
       }
     }
   end

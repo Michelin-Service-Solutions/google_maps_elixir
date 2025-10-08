@@ -92,7 +92,7 @@ defmodule GoogleMaps.RequestTest do
 
     assert {"Content-Type", "application/json"} in headers
     assert {"x-goog-api-key", "test_api_key"} in headers
-    assert {"x-goog-fieldmask", "originIndex,destinationIndex,duration,distanceMeters,status,condition"} in headers
+    assert {"x-goog-fieldmask", "originIndex,distanceMeters,duration,staticDuration"} in headers
   end
 
   test "POST transforms coordinate origins correctly" do
@@ -111,6 +111,9 @@ defmodule GoogleMaps.RequestTest do
             "longitude" => -82.2282223
           }
         }
+      },
+      "routeModifiers" => %{
+        "avoidFerries" => true
       }
     }] = parsed_body["origins"]
   end
@@ -169,7 +172,7 @@ defmodule GoogleMaps.RequestTest do
 
     assert {"Content-Type", "application/json"} in headers
     assert {"x-goog-api-key", "custom_key"} in headers
-    assert {"x-goog-fieldmask", "originIndex,destinationIndex,duration,distanceMeters,status,condition"} in headers
+    assert {"x-goog-fieldmask", "originIndex,distanceMeters,duration,staticDuration"} in headers
     assert {"Authorization", "Bearer token123"} in headers
   end
 
