@@ -55,7 +55,7 @@ defmodule GoogleMaps.Request do
       | headers
     ]
 
-    requester().post(url, headers, [body: body] ++ options)
+    requester().post(url, body, headers, options)
     |> format_headers()
   end
 
@@ -83,7 +83,10 @@ defmodule GoogleMaps.Request do
   end
 
   defp transform_origins(%{origins: origins} = params) when is_list(origins) do
-    transformed_origins = Enum.map(origins, &transform_waypoint/1)
+    transformed_origins =
+      origins
+      |> Enum.map(&transform_waypoint/1)
+      |> Enum.map(&add_route_modifiers/1)
     %{params | origins: transformed_origins}
   end
   defp transform_origins(params), do: params
@@ -94,6 +97,13 @@ defmodule GoogleMaps.Request do
   end
   defp transform_destinations(params), do: params
 
+  # Add route modifiers only to origin waypoints
+  defp add_route_modifiers(waypoint) do
+    Map.put(waypoint, :routeModifiers, %{
+      avoidFerries: true
+    })
+  end
+
   defp transform_waypoint({lat, lng}) when is_number(lat) and is_number(lng) do
     %{
       waypoint: %{
@@ -103,9 +113,6 @@ defmodule GoogleMaps.Request do
             longitude: lng
           }
         }
-      },
-      routeModifiers: %{
-        avoidFerries: true
       }
     }
   end

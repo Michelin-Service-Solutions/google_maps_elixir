@@ -8,8 +8,8 @@ defmodule GoogleMaps.RequestTest do
       {:ok, %{body: url, headers: headers, options: options}}
     end
 
-    def post(url, headers, options) do
-      {:ok, %{body: url, headers: headers, options: options}}
+    def post(url, body, headers, options) do
+      {:ok, %{body: url, headers: headers, options: [body: body] ++ options}}
     end
   end
 
@@ -130,6 +130,29 @@ defmodule GoogleMaps.RequestTest do
         "address" => "1 The Parkway, Greenville, SC 29615, USA"
       }
     }] = parsed_body["destinations"]
+
+    # Verify destinations do NOT have routeModifiers
+    [destination] = parsed_body["destinations"]
+    refute Map.has_key?(destination, "routeModifiers")
+  end
+
+  test "POST origins have routeModifiers but destinations do not" do
+    params = [
+      origins: [{34.9489252, -82.2282223}],
+      destinations: ["1 The Parkway, Greenville, SC 29615, USA"]
+    ]
+    {:ok, %{options: options}} = Request.post("distance_matrix", params)
+
+    body = Keyword.get(options, :body)
+    parsed_body = Jason.decode!(body)
+
+    # Origins should have routeModifiers
+    [origin] = parsed_body["origins"]
+    assert %{"avoidFerries" => true} = origin["routeModifiers"]
+
+    # Destinations should NOT have routeModifiers
+    [destination] = parsed_body["destinations"]
+    refute Map.has_key?(destination, "routeModifiers")
   end
 
   test "POST transforms place_id destinations correctly" do
