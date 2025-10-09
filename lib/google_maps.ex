@@ -1886,7 +1886,120 @@ defmodule GoogleMaps do
     |> Response.wrap()
   end
 
+  @doc """
+  Direct POST request to Google Maps API endpoint.
+
+  Similar to `get/2`, but uses POST method for endpoints that require it.
+  """
+  @spec post(String.t(), options()) :: Response.t()
+  def post(endpoint, params) do
+    Request.post(endpoint, params)
+    |> Response.wrap()
+  end
+
   @spec coordinate(coordinate()) :: binary()
   defp coordinate({lat, lng}) when is_number(lat) and is_number(lng), do: "#{lat},#{lng}"
   defp coordinate(coordinate) when is_binary(coordinate), do: coordinate
+
+
+  @doc """
+  Finds the distance between two addresses with Google's Routing API.
+
+  ## Args:
+    * `origins` — The starting point for calculating travel distance and time.
+
+    * `destinations` — The finishing point for calculating travel distance and time.
+
+  ## Options:
+
+    * `mode` (defaults to `driving`) — Specifies the mode of transport to use
+      when calculating distance.
+
+    * `language` — The language in which to return results.
+
+    * `avoid` — Introduces restrictions to the route. Valid values are specified
+      in the Restrictions section of this document. Only one restriction can be
+      specified.
+
+    * `units` — Specifies the unit system to use when expressing distance as
+      text. See the Unit Systems section of this document for more information.
+
+    * traffic_model (defaults to `best_guess`) — Specifies the assumptions to
+      use when calculating time in traffic.
+
+
+  This function returns `{:ok, body}` if the request is successful, and
+  Google returns data. It returns `{:error, error}` when there is HTTP
+  errors, or `{:error, status, error_message}` when the request is successful, but
+  Google returns status codes different than "OK", i.e.:
+  * "NOT_FOUND"
+  * "ZERO_RESULTS"
+  * "MAX_WAYPOINTS_EXCEEDED"
+  * "INVALID_REQUEST"
+  * "OVER_QUERY_LIMIT"
+  * "REQUEST_DENIED"
+  * "UNKNOWN_ERROR"
+
+  ## Examples
+
+      # Distance with an invalid API key
+      iex> {:error, status, error_message} = GoogleMaps.distance("Place d'Armes, 78000 Versailles", "Champ de Mars, 5 Avenue Anatole", key: "invalid key")
+      iex> status
+      "REQUEST_DENIED"
+      iex> error_message
+      "The provided API key is invalid."
+
+      # Distance from Eiffel Tower to Palace of Versailles.
+      iex> {:ok, result} = GoogleMaps.distance("Place d'Armes, 78000 Versailles", "Champ de Mars, 5 Avenue Anatole")
+      iex> match?(%{
+      ...>   "destination_addresses" => _,
+      ...>   "origin_addresses" => _,
+      ...>   "rows" => [
+      ...>     %{"elements" => [%{"distance" => %{"text" => _, "value" => _}}]}
+      ...>   ]
+      ...> }, result)
+      true
+
+      # Distance from coordinate A to coordinate B
+      iex> {:ok, result2} = GoogleMaps.distance({27.5119772, -109.9409902}, {19.4156207, -99.171256517})
+      iex> match?(%{
+      ...>   "destination_addresses" => _,
+      ...>   "origin_addresses" => _,
+      ...>   "rows" => [
+      ...>     %{"elements" => [%{"distance" => %{"text" => _, "value" => _}}]}
+      ...>   ]
+      ...> }, result2)
+      true
+  """
+  def distanceRouting(origin, destination, options \\ [])
+
+  @spec distanceRouting(address(), address(), options()) :: Response.t()
+  def distanceRouting(origin, destination, options) when is_binary(origin) and is_binary(destination) do
+    params =
+      options
+      |> Keyword.merge(origins: [origin], destinations: [destination])
+
+    GoogleMaps.post("distancematrix", params)
+  end
+
+  @spec distanceRouting([coordinate() | address()], [coordinate() | address()], options()) :: Response.t()
+  def distanceRouting(origins, destinations, options) when is_list(origins) and is_list(destinations) do
+    params =
+      options
+      |> Keyword.merge(origins: origins, destinations: destinations)
+
+    GoogleMaps.post("distancematrix", params)
+  end
+
+  @spec distanceRouting(coordinate(), coordinate(), options()) :: Response.t()
+  def distanceRouting(origin, destination, options) do
+    params =
+      options
+      |> Keyword.merge(origins: [origin], destinations: [destination])
+
+    GoogleMaps.post("distancematrix", params)
+  end
+
+
+
 end

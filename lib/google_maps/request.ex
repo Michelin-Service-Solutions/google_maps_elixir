@@ -45,7 +45,7 @@ defmodule GoogleMaps.Request do
       |> json_encode()
 
     # Add API key to URL as query parameter
-    url = "https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix?key=#{key}"
+    url = "https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix"
 
     # Set required headers for JSON and Google API
     headers = [
@@ -55,8 +55,9 @@ defmodule GoogleMaps.Request do
       | headers
     ]
 
-    requester().post(url, body, headers, options)
-    |> format_headers()
+    response = requester().post(url, body, headers, options)
+    IO.inspect(response, label: "POST Response")
+    format_headers(response)
   end
 
   # Helpers

@@ -17,5 +17,7 @@ defmodule GoogleMaps.Response do
   def wrap({:ok, %{body: %{"status" => status}}}), do: {:error, status}
   def wrap({:ok, %{body: body, status_code: 200, headers: %{"Content-Type" => "image" <> _}}})
   when is_binary(body), do: {:ok, body}
-  def wrap({:ok, %{status_code: status, headers: %{"Content-Type" => _}}}), do: {:error, status}
+  def wrap({:ok, %{body: body, status_code: status_code, headers: %{"Content-Type" => "application/json" <> _}}})
+  when status_code >= 200 and status_code < 300, do: {:ok, body}
+  def wrap({:ok, %{status_code: status, headers: %{"Content-Type" => _}}}) when status >= 400, do: {:error, status}
 end
