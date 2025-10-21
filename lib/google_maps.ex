@@ -10,6 +10,7 @@ defmodule GoogleMaps do
   `options`, which are passed to the underlying `Request`. See the
   documentation of `HTTPoison` for details.
   """
+  require Logger
   alias GoogleMaps.{Request, Response}
 
   @typedoc """
@@ -1970,6 +1971,9 @@ defmodule GoogleMaps do
 
   @spec distanceRouting(address(), address(), options()) :: Response.t()
   def distanceRouting(origin, destination, options) when is_binary(origin) and is_binary(destination) do
+    Logger.info("[GoogleMaps.distanceRouting] Called with origin: #{inspect(origin)}, destination: #{inspect(destination)}")
+    Logger.info("[GoogleMaps.distanceRouting] Options: #{inspect(options, pretty: true)}")
+
     params =
       options
       # |> Keyword.merge(origins: origin, destinations: destination)
@@ -1980,11 +1984,15 @@ defmodule GoogleMaps do
       routingPreference: "TRAFFIC_AWARE"
     )
 
+    Logger.debug("[GoogleMaps.distanceRouting] Final params before POST: #{inspect(params, pretty: true)}")
     GoogleMaps.post("distancematrix", params)
   end
 
   @spec distanceRouting([coordinate() | address()], [coordinate() | address()], options()) :: Response.t()
   def distanceRouting(origins, destinations, options) do
+    Logger.info("[GoogleMaps.distanceRouting (coord/addr list)] Called with origins: #{inspect(origins)}, destinations: #{inspect(destinations)}")
+    Logger.info("[GoogleMaps.distanceRouting] Options: #{inspect(options, pretty: true)}")
+
     # [origins, destinations] =
     #   [origins, destinations]
     #   |> Enum.map(fn locations ->
@@ -2004,6 +2012,7 @@ defmodule GoogleMaps do
       routingPreference: "TRAFFIC_AWARE"
     )
 
+    Logger.debug("[GoogleMaps.distanceRouting] Final params before POST: #{inspect(params, pretty: true)}")
     GoogleMaps.post("distancematrix", params)
   end
 

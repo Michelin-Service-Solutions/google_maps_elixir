@@ -1,5 +1,6 @@
 defmodule GoogleMaps.Request do
   @moduledoc false
+  require Logger
 
   @doc """
   GET an endpoint with param keyword list
@@ -30,6 +31,9 @@ defmodule GoogleMaps.Request do
   # TODO: Support other endpoints that require POST requests
   @spec post(String.t, keyword()) :: GoogleMaps.Response.t
   def post(_endpoint, params) do
+    Logger.info("[GoogleMaps.Request] POST request initiated")
+    Logger.debug("[GoogleMaps.Request] Incoming params: #{inspect(params, pretty: true)}")
+
     {secure, params} = Keyword.pop(params, :secure)
     {key, params} = Keyword.pop(params, :key, api_key())
     {headers, params} = Keyword.pop(params, :headers, [])
@@ -50,12 +54,35 @@ defmodule GoogleMaps.Request do
     # Set required headers for JSON and Google API
     headers = [
       {"Content-Type", "application/json"},
-      {"x-goog-api-key", key},
-      {"x-goog-fieldmask", "originIndex,distanceMeters,duration,staticDuration"}
+      {"X-Goog-Api-Key", key},
+      {"X-Goog-FieldMask", "originIndex,destinationIndex,distanceMeters,duration,status,condition"}
       | headers
     ]
 
+    Logger.info("[GoogleMaps.Request] POST URL: #{url}")
+    Logger.debug("[GoogleMaps.Request] Request headers: #{inspect(headers, pretty: true)}")
+    Logger.info("[GoogleMaps.Request] ===== REQUEST JSON BODY =====")
+    Logger.info(body)
+    Logger.info("[GoogleMaps.Request] ===== END REQUEST JSON =====")
+
     response = requester().post(url, body, headers, options)
+
+    # Log the response details
+    case response do
+      {:ok, %{status_code: status_code, body: response_body} = resp} ->
+        Logger.info("[GoogleMaps.Request] Response status: #{status_code}")
+        Logger.info("[GoogleMaps.Request] ===== RESPONSE BODY =====")
+        Logger.info(response_body)
+        Logger.info("[GoogleMaps.Request] ===== END RESPONSE =====")
+        Logger.debug("[GoogleMaps.Request] Full response struct: #{inspect(resp, pretty: true)}")
+
+      {:error, error} ->
+        Logger.error("[GoogleMaps.Request] Request failed with error: #{inspect(error, pretty: true)}")
+
+      _ ->
+        Logger.debug("[GoogleMaps.Request] Response: #{inspect(response, pretty: true)}")
+    end
+
     # IO.inspect(response, label: "POST Response")
     format_headers(response)
   end
@@ -77,23 +104,45 @@ defmodule GoogleMaps.Request do
 
   # Transform params for POST request JSON body
   defp transform_post_params(params) do
-    params
+    Logger.debug("[GoogleMaps.Request] Starting transform_post_params with: #{inspect(params, pretty: true)}")
+
+    result = params
     |> Enum.into(%{})
     |> transform_origins()
     |> transform_destinations()
+    |> clean_invalid_params()
+
+    Logger.debug("[GoogleMaps.Request] After transformation: #{inspect(result, pretty: true)}")
+    result
+  end
+
+  # Remove parameters that are not valid for Routes API v2
+  defp clean_invalid_params(params) do
+    # The 'avoid' parameter is not a top-level parameter in Routes API v2
+    # It's already handled in routeModifiers for origins
+    params
+    |> Map.delete(:avoid)
   end
 
   defp transform_origins(%{origins: origins} = params) when is_list(origins) do
+    Logger.debug("[GoogleMaps.Request] Transforming origins list: #{inspect(origins)}")
+
     transformed_origins =
       origins
       |> Enum.map(&transform_waypoint/1)
       |> Enum.map(&add_route_modifiers/1)
+
+    Logger.debug("[GoogleMaps.Request] Transformed origins: #{inspect(transformed_origins, pretty: true)}")
     %{params | origins: transformed_origins}
   end
   defp transform_origins(params), do: params
 
   defp transform_destinations(%{destinations: destinations} = params) when is_list(destinations) do
+    Logger.debug("[GoogleMaps.Request] Transforming destinations list: #{inspect(destinations)}")
+
     transformed_destinations = Enum.map(destinations, &transform_waypoint/1)
+
+    Logger.debug("[GoogleMaps.Request] Transformed destinations: #{inspect(transformed_destinations, pretty: true)}")
     %{params | destinations: transformed_destinations}
   end
   defp transform_destinations(params), do: params
@@ -122,6 +171,21 @@ defmodule GoogleMaps.Request do
     %{
       waypoint: %{
         placeId: place_id
+      }
+    }
+  end
+
+  # Handle encoded polylines (e.g., "enc:...")
+  defp transform_waypoint("enc:" <> encoded_polyline) do
+    # Strip trailing colon if present
+    cleaned_polyline = String.trim_trailing(encoded_polyline, ":")
+    Logger.debug("[GoogleMaps.Request] Transforming encoded polyline (cleaned): enc:#{String.slice(cleaned_polyline, 0, 50)}...")
+    %{
+      waypoint: %{
+        via: false,
+        polyline: %{
+          encodedPolyline: cleaned_polyline
+        }
       }
     }
   end

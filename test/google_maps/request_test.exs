@@ -90,8 +90,8 @@ defmodule GoogleMaps.RequestTest do
     {:ok, %{headers: headers}} = Request.post("distance_matrix", params)
 
     assert {"Content-Type", "application/json"} in headers
-    assert {"x-goog-api-key", "test_api_key"} in headers
-    assert {"x-goog-fieldmask", "originIndex,distanceMeters,duration,staticDuration"} in headers
+    assert {"X-Goog-Api-Key", "test_api_key"} in headers
+    assert {"X-Goog-FieldMask", "originIndex,destinationIndex,distanceMeters,duration,status,condition"} in headers
   end
 
   test "POST transforms coordinate origins correctly" do
@@ -193,8 +193,8 @@ defmodule GoogleMaps.RequestTest do
     {:ok, %{headers: headers}} = Request.post("distance_matrix", params)
 
     assert {"Content-Type", "application/json"} in headers
-    assert {"x-goog-api-key", "custom_key"} in headers
-    assert {"x-goog-fieldmask", "originIndex,distanceMeters,duration,staticDuration"} in headers
+    assert {"X-Goog-Api-Key", "custom_key"} in headers
+    assert {"X-Goog-FieldMask", "originIndex,destinationIndex,distanceMeters,duration,status,condition"} in headers
     assert {"Authorization", "Bearer token123"} in headers
   end
 
