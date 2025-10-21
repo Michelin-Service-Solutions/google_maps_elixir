@@ -1971,8 +1971,8 @@ defmodule GoogleMaps do
 
   @spec distanceRouting(address(), address(), options()) :: Response.t()
   def distanceRouting(origin, destination, options) when is_binary(origin) and is_binary(destination) do
-    Logger.info("[GoogleMaps.distanceRouting] Called with origin: #{inspect(origin)}, destination: #{inspect(destination)}")
-    Logger.info("[GoogleMaps.distanceRouting] Options: #{inspect(options, pretty: true)}")
+    Logger.debug("[GoogleMaps.distanceRouting] Called with origin: #{inspect(origin)}, destination: #{inspect(destination)}")
+    Logger.debug("[GoogleMaps.distanceRouting] Options: #{inspect(options, pretty: true)}")
 
     params =
       options
@@ -1990,8 +1990,8 @@ defmodule GoogleMaps do
 
   @spec distanceRouting([coordinate() | address()], [coordinate() | address()], options()) :: Response.t()
   def distanceRouting(origins, destinations, options) do
-    Logger.info("[GoogleMaps.distanceRouting (coord/addr list)] Called with origins: #{inspect(origins)}, destinations: #{inspect(destinations)}")
-    Logger.info("[GoogleMaps.distanceRouting] Options: #{inspect(options, pretty: true)}")
+    Logger.debug("[GoogleMaps.distanceRouting (coord/addr list)] Called with origins: #{inspect(origins)}, destinations: #{inspect(destinations)}")
+    Logger.debug("[GoogleMaps.distanceRouting] Options: #{inspect(options, pretty: true)}")
 
     # [origins, destinations] =
     #   [origins, destinations]

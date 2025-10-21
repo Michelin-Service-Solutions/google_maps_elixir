@@ -31,7 +31,7 @@ defmodule GoogleMaps.Request do
   # TODO: Support other endpoints that require POST requests
   @spec post(String.t, keyword()) :: GoogleMaps.Response.t
   def post(_endpoint, params) do
-    Logger.info("[GoogleMaps.Request] POST request initiated")
+    Logger.debug("[GoogleMaps.Request] POST request initiated")
     Logger.debug("[GoogleMaps.Request] Incoming params: #{inspect(params, pretty: true)}")
 
     {secure, params} = Keyword.pop(params, :secure)
@@ -59,21 +59,21 @@ defmodule GoogleMaps.Request do
       | headers
     ]
 
-    Logger.info("[GoogleMaps.Request] POST URL: #{url}")
+    Logger.debug("[GoogleMaps.Request] POST URL: #{url}")
     Logger.debug("[GoogleMaps.Request] Request headers: #{inspect(headers, pretty: true)}")
-    Logger.info("[GoogleMaps.Request] ===== REQUEST JSON BODY =====")
-    Logger.info(body)
-    Logger.info("[GoogleMaps.Request] ===== END REQUEST JSON =====")
+    Logger.debug("[GoogleMaps.Request] ===== REQUEST JSON BODY =====")
+    Logger.debug(body)
+    Logger.debug("[GoogleMaps.Request] ===== END REQUEST JSON =====")
 
     response = requester().post(url, body, headers, options)
 
     # Log the response details
     case response do
       {:ok, %{status_code: status_code, body: response_body} = resp} ->
-        Logger.info("[GoogleMaps.Request] Response status: #{status_code}")
-        Logger.info("[GoogleMaps.Request] ===== RESPONSE BODY =====")
-        Logger.info(response_body)
-        Logger.info("[GoogleMaps.Request] ===== END RESPONSE =====")
+        Logger.debug("[GoogleMaps.Request] Response status: #{status_code}")
+        Logger.debug("[GoogleMaps.Request] ===== RESPONSE BODY =====")
+        Logger.debug(response_body)
+        Logger.debug("[GoogleMaps.Request] ===== END RESPONSE =====")
         Logger.debug("[GoogleMaps.Request] Full response struct: #{inspect(resp, pretty: true)}")
 
       {:error, error} ->
