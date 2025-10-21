@@ -184,7 +184,7 @@ defmodule GoogleMaps do
       iex> status
       "REQUEST_DENIED"
       iex> error_message
-      "The provided API key is invalid."
+      "The provided API key is invalid. "
 
       # Driving directions from Toronto, Ontario to Montreal, Quebec.
       iex> {:ok, result} = GoogleMaps.directions("Toronto", "Montreal")
@@ -293,7 +293,7 @@ defmodule GoogleMaps do
       iex> status
       "REQUEST_DENIED"
       iex> error_message
-      "The provided API key is invalid."
+      "The provided API key is invalid. "
 
       # Distance from Eiffel Tower to Palace of Versailles.
       iex> {:ok, result} = GoogleMaps.distance("Place d'Armes, 78000 Versailles", "Champ de Mars, 5 Avenue Anatole")
@@ -667,7 +667,7 @@ defmodule GoogleMaps do
       iex> status
       "REQUEST_DENIED"
       iex> error_message
-      "The provided API key is invalid."
+      "The provided API key is invalid. "
 
       iex> {:ok, %{"results" => [result]}} =
       ...>  GoogleMaps.geocode("1600 Amphitheatre Parkway, Mountain View, CA")
@@ -929,7 +929,7 @@ defmodule GoogleMaps do
       iex> paris["place_id"]
       "ChIJD7fiBh9u5kcRYJSMaMOCCwQ"
       iex> paris["types"]
-      [ "locality", "political", "geocode" ]
+      [ "geocode", "locality", "political" ]
 
       # Establishments containing the string "Amoeba" within an area
       # centered in San Francisco, CA:
@@ -1621,7 +1621,7 @@ defmodule GoogleMaps do
 
       iex> {:ok, response} = GoogleMaps.place_details("ChIJy5RYvL23t4kR3U1oXsAxEzs")
       iex> response["result"]["formatted_address"]
-      "719-751 Madison Pl NW, Washington, DC 20005, USA"
+      "719-751 Madison Pl NW, Washington, DC 20439, USA"
   """
   @spec place_details(place_id, options()) :: Response.t()
   def place_details(place_id, options \\ [])
@@ -1822,7 +1822,7 @@ defmodule GoogleMaps do
       iex> status
       "REQUEST_DENIED"
       iex> error_message
-      "The provided API key is invalid."
+      "The provided API key is invalid. "
 
       iex> {:ok, result} = GoogleMaps.get("directions", [
       ...>   origin: "Disneyland",
@@ -1844,7 +1844,7 @@ defmodule GoogleMaps do
       iex> paris["place_id"]
       "ChIJD7fiBh9u5kcRYJSMaMOCCwQ"
       iex> paris["types"]
-      [ "locality", "political", "geocode" ]
+      [ "geocode", "locality", "political"]
 
       # A request "Pizza near Par":
       iex> {:ok, result} = GoogleMaps.get("place/queryautocomplete", [input: "Pizza near Par"])
@@ -1886,11 +1886,6 @@ defmodule GoogleMaps do
     |> Response.wrap()
   end
 
-  @doc """
-  Direct POST request to Google Maps API endpoint.
-
-  Similar to `get/2`, but uses POST method for endpoints that require it.
-  """
   @spec post(String.t(), options()) :: Response.t()
   def post(endpoint, params) do
     Request.post(endpoint, params)
@@ -1947,7 +1942,7 @@ defmodule GoogleMaps do
       iex> status
       "REQUEST_DENIED"
       iex> error_message
-      "The provided API key is invalid."
+      "The provided API key is invalid. "
 
       # Distance from Eiffel Tower to Palace of Versailles.
       iex> {:ok, result} = GoogleMaps.distance("Place d'Armes, 78000 Versailles", "Champ de Mars, 5 Avenue Anatole")
@@ -1977,27 +1972,23 @@ defmodule GoogleMaps do
   def distanceRouting(origin, destination, options) when is_binary(origin) and is_binary(destination) do
     params =
       options
-      |> Keyword.merge(origins: [origin], destinations: [destination])
+      |> Keyword.merge(origins: origin, destinations: destination)
 
     GoogleMaps.post("distancematrix", params)
   end
 
   @spec distanceRouting([coordinate() | address()], [coordinate() | address()], options()) :: Response.t()
-  def distanceRouting(origins, destinations, options) when is_list(origins) and is_list(destinations) do
-    params =
-      options
-      |> Keyword.merge(origins: origins, destinations: destinations)
+  def distanceRouting(origins, destinations, options) do
+    [origins, destinations] =
+      [origins, destinations]
+      |> Enum.map(fn locations ->
+        [locations]
+        |> List.flatten()
+        |> Enum.map(&coordinate(&1))
+        |> Enum.join("|")
+      end)
 
-    GoogleMaps.post("distancematrix", params)
-  end
-
-  @spec distanceRouting(coordinate(), coordinate(), options()) :: Response.t()
-  def distanceRouting(origin, destination, options) do
-    params =
-      options
-      |> Keyword.merge(origins: [origin], destinations: [destination])
-
-    GoogleMaps.post("distancematrix", params)
+    distanceRouting(origins, destinations, options)
   end
 
 

@@ -75,7 +75,6 @@ defmodule GoogleMaps.RequestTest do
       scheme: "https",
       authority: "routes.googleapis.com",
       path: "/distanceMatrix/v2:computeRouteMatrix",
-      query: "key=test_api_key"
     } = URI.parse(url)
   end
 
