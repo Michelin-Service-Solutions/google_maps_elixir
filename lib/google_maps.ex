@@ -1972,23 +1972,39 @@ defmodule GoogleMaps do
   def distanceRouting(origin, destination, options) when is_binary(origin) and is_binary(destination) do
     params =
       options
-      |> Keyword.merge(origins: origin, destinations: destination)
+      # |> Keyword.merge(origins: origin, destinations: destination)
+      |> Keyword.merge(
+      origins: [origin],
+      destinations: [destination],
+      travelMode: "DRIVE",
+      routingPreference: "TRAFFIC_AWARE"
+    )
 
     GoogleMaps.post("distancematrix", params)
   end
 
   @spec distanceRouting([coordinate() | address()], [coordinate() | address()], options()) :: Response.t()
   def distanceRouting(origins, destinations, options) do
-    [origins, destinations] =
-      [origins, destinations]
-      |> Enum.map(fn locations ->
-        [locations]
-        |> List.flatten()
-        |> Enum.map(&coordinate(&1))
-        |> Enum.join("|")
-      end)
+    # [origins, destinations] =
+    #   [origins, destinations]
+    #   |> Enum.map(fn locations ->
+    #     [locations]
+    #     |> List.flatten()
+    #     |> Enum.map(&coordinate(&1))
+    #     |> Enum.join("|")
+    #   end)
 
-    distanceRouting(origins, destinations, options)
+    # distanceRouting(origins, destinations, options)
+    params =
+    options
+    |> Keyword.merge(
+      origins: List.flatten([origins]),
+      destinations: List.flatten([destinations]),
+      travelMode: "DRIVE",
+      routingPreference: "TRAFFIC_AWARE"
+    )
+
+    GoogleMaps.post("distancematrix", params)
   end
 
 
