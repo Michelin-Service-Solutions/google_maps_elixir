@@ -102,6 +102,18 @@ defmodule GoogleMaps.Request do
     Jason.encode!(data)
   end
 
+  # Parse coordinate strings like "35.2509357, -82.4061171" or "35.2509357,-82.4061171"
+  defp parse_coordinate_string(coordinate_string) do
+    with parts when length(parts) == 2 <- String.split(coordinate_string, ","),
+         [lat_str, lng_str] = Enum.map(parts, &String.trim/1),
+         {lat, ""} <- Float.parse(lat_str),
+         {lng, ""} <- Float.parse(lng_str) do
+      {:ok, {lat, lng}}
+    else
+      _ -> :error
+    end
+  end
+
   # Transform params for POST request JSON body
   defp transform_post_params(params) do
     Logger.debug("[GoogleMaps.Request] Starting transform_post_params with: #{inspect(params, pretty: true)}")
@@ -125,7 +137,7 @@ defmodule GoogleMaps.Request do
   end
 
   defp transform_origins(%{origins: origins} = params) when is_list(origins) do
-    Logger.debug("[GoogleMaps.Request] Transforming origins list: #{inspect(origins)}")
+    Logger.info("[GoogleMaps.Request] Transforming origins list: #{inspect(origins)}")
 
     transformed_origins =
       origins
@@ -190,12 +202,29 @@ defmodule GoogleMaps.Request do
     }
   end
 
-  defp transform_waypoint(address) when is_binary(address) do
-    %{
-      waypoint: %{
-        address: address
-      }
-    }
+  # Handle coordinate strings (e.g., "35.2509357, -82.4061171")
+  defp transform_waypoint(coordinate_string) when is_binary(coordinate_string) do
+    case parse_coordinate_string(coordinate_string) do
+      {:ok, {lat, lng}} ->
+        Logger.debug("[GoogleMaps.Request] Parsed coordinate string '#{coordinate_string}' as lat: #{lat}, lng: #{lng}")
+        %{
+          waypoint: %{
+            location: %{
+              latLng: %{
+                latitude: lat,
+                longitude: lng
+              }
+            }
+          }
+        }
+      :error ->
+        Logger.debug("[GoogleMaps.Request] Could not parse '#{coordinate_string}' as coordinates, treating as address")
+        %{
+          waypoint: %{
+            address: coordinate_string
+          }
+        }
+    end
   end
 
   defp transform_waypoint(waypoint) when is_map(waypoint), do: waypoint
