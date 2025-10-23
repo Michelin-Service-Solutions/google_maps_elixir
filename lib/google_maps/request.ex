@@ -144,17 +144,17 @@ defmodule GoogleMaps.Request do
       |> Enum.map(&transform_waypoint/1)
       |> Enum.map(&add_route_modifiers/1)
 
-    Logger.debug("[GoogleMaps.Request] Transformed origins: #{inspect(transformed_origins, pretty: true)}")
+    Logger.info("[GoogleMaps.Request] Transformed origins: #{inspect(transformed_origins, pretty: true)}")
     %{params | origins: transformed_origins}
   end
   defp transform_origins(params), do: params
 
   defp transform_destinations(%{destinations: destinations} = params) when is_list(destinations) do
-    Logger.debug("[GoogleMaps.Request] Transforming destinations list: #{inspect(destinations)}")
+    Logger.info("[GoogleMaps.Request] Transforming destinations list: #{inspect(destinations)}")
 
     transformed_destinations = Enum.map(destinations, &transform_waypoint/1)
 
-    Logger.debug("[GoogleMaps.Request] Transformed destinations: #{inspect(transformed_destinations, pretty: true)}")
+    Logger.info("[GoogleMaps.Request] Transformed destinations: #{inspect(transformed_destinations, pretty: true)}")
     %{params | destinations: transformed_destinations}
   end
   defp transform_destinations(params), do: params
